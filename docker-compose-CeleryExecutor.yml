@@ -18,15 +18,27 @@ services:
             - POSTGRES_PASSWORD=airflow
             - POSTGRES_DB=airflow
 
+    mysql:
+        image: mysql 
+        environment:
+            - MYSQL_ROOT_PASSWORD=password
+            - MYSQL_USER=airflow
+            - MYSQL_PASSWORD=airflow
+            - MYSQL_DATABASE=airflow
+
     webserver:
-        image: puckel/docker-airflow:1.7.1.3-2
+        #image: puckel/docker-airflow:1.7.1.3-2
+        build: .
         restart: always
         depends_on:
             - postgres
             - rabbitmq
         environment:
-            # - LOAD_EX=n
-            - EXECUTOR=Celery
+            - AIRFLOW__CORE__EXECUTOR=CeleryExecutor
+            - AIRFLOW__CORE__FERNET_KEY=Qyz82yXWjuVEfXMml8MhLlo0URHdvq_vae_wi1qFd98=
+            - AIRFLOW__CORE__SQL_ALCHEMY_CONN=mysql://airflow:airflow@mysql/airflow
+            - AIRFLOW__CORE__BROKER_URL=amqp://airflow:airflow@rabbitmq:5672/airflow
+            - AIRFLOW__CORE__LOAD_EXAMPLES=False
         # volumes:
         #     - /localpath/to/dags:/usr/local/airflow/dags
         ports:
@@ -34,35 +46,47 @@ services:
         command: webserver
 
     flower:
-        image: puckel/docker-airflow:1.7.1.3-2
+        #image: puckel/docker-airflow:1.7.1.3-2
+        build: .
         restart: always
         depends_on:
             - rabbitmq
         environment:
-            - EXECUTOR=Celery
+            - AIRFLOW__CORE__EXECUTOR=CeleryExecutor
+            - AIRFLOW__CORE__BROKER_URL=amqp://airflow:airflow@rabbitmq:5672/airflow
+            - AIRFLOW__CORE__LOAD_EXAMPLES=False
         ports:
             - "5555:5555"
         command: flower
 
     scheduler:
-        image: puckel/docker-airflow:1.7.1.3-2
+        #image: puckel/docker-airflow:1.7.1.3-2
+        build: .
         restart: always
         depends_on:
             - webserver
         # volumes:
         #     - /localpath/to/dags:/usr/local/airflow/dags
         environment:
-            # - LOAD_EX=n
-            - EXECUTOR=Celery
+            - AIRFLOW__CORE__EXECUTOR=CeleryExecutor
+            - AIRFLOW__CORE__FERNET_KEY=Qyz82yXWjuVEfXMml8MhLlo0URHdvq_vae_wi1qFd98=
+            - AIRFLOW__CORE__SQL_ALCHEMY_CONN=mysql://airflow:airflow@mysql/airflow
+            - AIRFLOW__CORE__BROKER_URL=amqp://airflow:airflow@rabbitmq:5672/airflow
+            - AIRFLOW__CORE__LOAD_EXAMPLES=False
         command: scheduler -n 5
 
     worker:
-        image: puckel/docker-airflow:1.7.1.3-2
+        #image: puckel/docker-airflow:1.7.1.3-2
+        build: .
         restart: always
         depends_on:
             - scheduler
         # volumes:
         #     - /localpath/to/dags:/usr/local/airflow/dags
         environment:
-            - EXECUTOR=Celery
+            - AIRFLOW__CORE__EXECUTOR=CeleryExecutor
+            - AIRFLOW__CORE__FERNET_KEY=Qyz82yXWjuVEfXMml8MhLlo0URHdvq_vae_wi1qFd98=
+            - AIRFLOW__CORE__SQL_ALCHEMY_CONN=mysql://airflow:airflow@mysql/airflow
+            - AIRFLOW__CORE__BROKER_URL=amqp://airflow:airflow@rabbitmq:5672/airflow
+            - AIRFLOW__CORE__LOAD_EXAMPLES=False
         command: worker

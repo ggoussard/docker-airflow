@@ -34,6 +34,8 @@ RUN set -ex \
         build-essential \
         libblas-dev \
         liblapack-dev \
+        libxml2-dev \
+        libxslt1-dev \
     ' \
     && echo "deb http://http.debian.net/debian jessie-backports main" >/etc/apt/sources.list.d/backports.list \
     && apt-get update -yqq \
@@ -43,7 +45,7 @@ RUN set -ex \
         curl \
         netcat \
         locales \
-    && apt-get install -yqq -t jessie-backports python-requests libpq-dev \
+    && apt-get install -yqq -t jessie-backports python-requests libpq-dev libmysqlclient-dev freetds-dev\
     && sed -i 's/^# en_US.UTF-8 UTF-8$/en_US.UTF-8 UTF-8/g' /etc/locale.gen \
     && locale-gen \
     && update-locale LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 \
@@ -54,7 +56,7 @@ RUN set -ex \
     && pip install ndg-httpsclient \
     && pip install pyasn1 \
     && pip install psycopg2 \
-    && pip install airflow[celery,postgresql,hive]==$AIRFLOW_VERSION \
+    && pip install airflow[devel,all_dbs,celery,samba,s3,slack,crypto,docker]==$AIRFLOW_VERSION \
     && apt-get remove --purge -yqq $buildDeps libpq-dev \
     && apt-get clean \
     && rm -rf \
